@@ -1,0 +1,10 @@
+.ipynb_checkpoints/
+.venv/
+.env
+notebooks/.ipynb_checkpoints/
+notebooks/.env
+notebooks/.DS_Store
+.DS_Store
+*.in
+amz_uk_processed_data.csv
+__pycache__
