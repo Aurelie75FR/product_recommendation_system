@@ -1,8 +1,7 @@
 import streamlit as st
 import pandas as pd
-import sys
 import numpy as np
-# sys.path.append('../notebooks/utils') # didn't works anymore and don't know why
+
 from recommender_sys import AmazonRecommender
 
 # Page config
@@ -21,7 +20,7 @@ if 'selected_product' not in st.session_state:
 
 def calculate_search_relevance(row, search_terms, exact_phrase=False):
     """
-    Calcule un score de pertinence basé sur les termes de recherche et les caractéristiques des produits.
+    Calculates a relevance score based on search terms and product characteristics.
     """
     title = str(row['title']).lower()
     category = str(row['categoryName']).lower()
@@ -30,13 +29,13 @@ def calculate_search_relevance(row, search_terms, exact_phrase=False):
     # Diviser les termes de recherche en mots-clés
     search_terms = [term.lower() for term in search_terms.split()]
     
-    # Boost si tous les mots-clés apparaissent dans le titre
+    # Boost if all the keywords appear in the title
     if all(term in title for term in search_terms):
         score += 100
         if exact_phrase and search_terms[0] in title:
             score += 50
 
-    # Pénalisation pour les accessoires ou produits compatibles
+    # Penalty for compatible accessories or products
     accessory_keywords = [
         'cable', 'case', 'cover', 'accessory', 'accessories', 'stand', 
         'mount', 'holder', 'protector', 'aux', 'adapter', 'compatible', 'for'
@@ -44,93 +43,15 @@ def calculate_search_relevance(row, search_terms, exact_phrase=False):
     if any(word in title for word in accessory_keywords):
         score -= 100
 
-    # Bonus pour la correspondance exacte de la catégorie
+    # Bonus for exact category match
     if any(term in category for term in search_terms):
         score += 50
 
-    # Prendre en compte les notes et les avis
+    # Taking notes and opinions into account
     score += min(row['stars'], 5)
     score += min(np.log1p(row['reviews']) / 20, 2.5)
     
     return max(score, 0)
-
-
-# def show_product_detail(product, df):
-#     """
-#     render product page details
-#     """
-#     # Back btn
-#     if st.button("← Back to Result"):
-#         st.session_state.current_page = 'main'
-#         st.rerun()
-
-#     # Select product details
-#     col1, col2 = st.columns([1, 2])
-    
-#     with col1:
-#         if pd.notna(product.get('imgUrl')):
-#             try:
-#                 st.image(product['imgUrl'], width=300)
-#             except:
-#                 st.write("🖼️ Image not available")
-            
-#     with col2:
-#         st.title(product['title'])
-#         st.write(f"💰 Price: £{product['price']:.2f}")
-#         st.write(f"⭐ Rating: {product['stars']:.1f}/5 ({int(product['reviews']):,} avis)")
-#         st.write(f"📁 Category: {product['categoryName']}")
-        
-#         if pd.notna(product.get('productURL')):
-#             st.markdown(f"[See on Amazon]({product['productURL']})")
-
-#     # Recommendations section
-#     st.markdown("---")
-#     st.header("Recommended similar products")
-    
-#     try:
-#         # Init recommender
-#         recommender = AmazonRecommender()
-#         recommender.fit(df)
-        
-#         # Get recommendations
-#         recommendations = recommender.get_similar_products(product.name)
-        
-#         if not recommendations.empty:
-#             # Affichage en grille des recommandations
-#             cols = st.columns(3)
-#             for idx, rec in recommendations.iterrows():
-#                 with cols[idx % 3]:
-#                     # Image du produit
-# #                     # Debug 
-# #                     st.write("Debug - Infos produit:", rec.to_dict())
-#                     if pd.notna(rec.get('imgUrl')):
-#                         try:
-#                             st.image(rec['imgUrl'], width=200)
-#                         except:
-#                             st.write("🖼️ Image not available")
-                    
-#                     # Informations du produit
-#                     st.markdown(f"**{rec['title'][:100]}...**")
-#                     st.write(f"💰 Price: £{rec['price']:.2f}")
-#                     st.write(f"⭐ Rating: {rec['stars']:.1f}/5 ({int(rec['reviews']):,} avis)")
-#                     st.write(f"📁 {rec['categoryName']}")
-                    
-#                     # Liens et actions
-#                     col1, col2 = st.columns([1, 1])
-#                     with col1:
-#                         if pd.notna(rec.get('productURL')):
-#                             st.markdown(f"[See on Amazon]({rec['productURL']})")
-#                     with col2:
-#                         if st.button("See details", key=f"rec_{idx}"):
-#                             st.session_state.selected_product = rec
-#                             st.rerun()
-                    
-#                     st.markdown("---")
-#         else:
-#             st.warning("No recommendations found for this product.")
-            
-#     except Exception as e:
-#         st.error(f"Error when loading recommendations: {str(e)}")
 
 def show_product_detail(product, df):
     """
@@ -164,7 +85,7 @@ def show_product_detail(product, df):
     st.markdown("---")
     st.header("Recommended similar products")
     
-    # Style CSS pour le conteneur de produit
+    # CSS style for the product container
     product_container_style = """
         <style>
             .product-card {
@@ -200,7 +121,7 @@ def show_product_detail(product, df):
             cols = st.columns(3)
             for idx, rec in recommendations.iterrows():
                 with cols[idx % 3]:
-                    # Carte produit avec image
+                    # Product card with image
                     st.markdown("""
                         <div class="product-card">
                             <div class="product-image">
@@ -209,7 +130,7 @@ def show_product_detail(product, df):
                         </div>
                     """.format(rec['imgUrl'] if pd.notna(rec.get('imgUrl')) else ""), unsafe_allow_html=True)
                     
-                    # Informations produit
+                    # Product info
                     st.markdown(f"**{rec['title'][:100]}...**")
                     st.write(f"💰 Price: £{rec['price']:.2f}")
                     st.write(f"⭐ Rating: {rec['stars']:.1f}/5 ({int(rec['reviews']):,} reviews)")
@@ -234,7 +155,7 @@ def show_product_detail(product, df):
 @st.cache_data
 def load_data():
     """
-    Charge et prépare les données pour l'application
+    Loads and prepares data for the application
     """
     try:
         df = pd.read_csv("../data/clean/amazon_uk_final.csv")
@@ -250,13 +171,13 @@ def load_data():
         st.error(f"Error when loading data: {str(e)}")
         return None
 
-# Chargement des données
+# Loading data
 df = load_data()
 
 if df is not None:
     try:
 
-        # Dans la section principale (après le chargement des données)
+        # In the main section (after data loading)
         if st.session_state.current_page == 'main':
             st.title("🛍️ Recommendation system with Amazon products")
             
@@ -266,17 +187,17 @@ if df is not None:
             
             st.sidebar.write(f"Total products: {len(df):,}")
             
-            # Barre de recherche
+            # Search bar
             search_query = st.text_input("🔍 Product search", "")
             
-            # Initialisation avec les produits les plus populaires
-            if not search_query:  # Si aucune recherche n'est effectuée
+            # Initialisation with the most popular products
+            if not search_query:  # If no search is carried out
                 filtered_df = df[
                     (df['stars'] >= 4.0) & 
                     (df['stars'] <= 5.0)
                 ].copy()
                 
-                # Calcul du score de popularité
+                # Calculating the popularity score
                 filtered_df['popularity_score'] = filtered_df['stars'] * np.log1p(filtered_df['reviews'])
                 filtered_df = filtered_df.sort_values('popularity_score', ascending=False)
                 
@@ -352,12 +273,10 @@ if df is not None:
             
             st.write("Most popular products:")
 
-
-            # Dans la section d'affichage des produits
             if len(filtered_df) > 0:
                 filtered_df = filtered_df.head(30)
                 
-                # Style CSS pour le conteneur de produit
+                # CSS style for the product container
                 product_container_style = """
                     <style>
                         .product-card {
@@ -394,7 +313,7 @@ if df is not None:
                             </div>
                         """.format(product['imgUrl'] if pd.notna(product['imgUrl']) else ""), unsafe_allow_html=True)
                         
-                        # Informations du produit
+                        # Product info
                         st.markdown(f"**{product['title'][:100]}...**")
                         st.write(f"💰 Price: £{product['price']:.2f}")
                         st.write(f"⭐ Rating: {product['stars']:.1f}/5 ({int(product['reviews']):,} reviews)")

@@ -7,7 +7,7 @@ filterwarnings('ignore', category=UserWarning)
 
 class AmazonRecommender:
     """
-    Système de recommandation pour les produits Amazon
+    Amazon product recommendation system
     """
     def __init__(self):
         self.knn_model = None
@@ -17,7 +17,7 @@ class AmazonRecommender:
     
     def _calculate_category_similarity(self, cat1, cat2):
         """
-        Calcule la similarité entre deux catégories basée sur des règles métier
+        Calculates the similarity between two categories based on business rules
         """
         electronics_categories = {
             'Hi-Fi Speakers', 'PC & Video Games', 'PC Gaming Accessories',
@@ -43,26 +43,26 @@ class AmazonRecommender:
     
     def create_product_features(self, df):
         """
-        Crée les features avec pondérations adaptatives
+        Creates features with adaptive weightings
         """
         feature_df = pd.DataFrame(index=df.index)
         
-        # Features numériques normalisées
+        # Standardised numerical features
         feature_df['price_norm'] = np.log1p(df['price']) / np.log1p(df['price'].max())
         feature_df['stars_norm'] = df['stars'] / 5
         feature_df['reviews_norm'] = np.log1p(df['reviews']) / np.log1p(df['reviews'].max())
         
-        # Segmentation des prix
+        # Price segmentation
         price_quantiles = pd.qcut(df['price'], q=5, labels=['very_low', 'low', 'medium', 'high', 'very_high'])
         price_dummies = pd.get_dummies(price_quantiles, prefix='price')
         
-        # Segmentation des notes
+        # Segmentation of ratings
         rating_cats = pd.cut(df['stars'], 
                            bins=[0, 3.5, 4.0, 4.5, 5.0], 
                            labels=['low', 'medium', 'high', 'very_high'])
         rating_dummies = pd.get_dummies(rating_cats, prefix='rating')
         
-        # Catégories principales
+        # Main categories
         top_categories = df['categoryName'].value_counts().nlargest(50).index
         df_filtered = df.copy()
         df_filtered.loc[~df_filtered['categoryName'].isin(top_categories), 'categoryName'] = 'Other'
@@ -85,13 +85,13 @@ class AmazonRecommender:
 
     def get_similar_products(self, product_id, n=5):
         """
-        Version raffinée avec recommandations plus pertinentes
+        Refined version with better recommendations
         """
         try:
             original = self.product_data.loc[product_id]
             recommendations = []
             
-            # Limites de ratio de prix
+            # Price ratio limits
             max_price_ratio = 3.0
             min_price_ratio = 0.2
             
@@ -112,12 +112,12 @@ class AmazonRecommender:
             similar_products['price_score'] = 1 - np.abs(np.log(similar_products['price_ratio']))
             similar_products['price_score'] = similar_products['price_score'].clip(0, 1)
             
-            # Score initial garanti positif
+            # Guaranteed positive initial score
             similar_products['initial_score'] = (
                 similar_products['category_similarity'] * 0.4 +
                 similar_products['price_score'] * 0.3 +
                 (similar_products['stars'] / 5) * 0.3
-            ).clip(0, 1)  # S'assurer que le score est entre 0 et 1
+            ).clip(0, 1)  # Make sure the score is between 0 and 1
             
             segments = [
                 ("Même catégorie, prix différent", 
@@ -139,13 +139,13 @@ class AmazonRecommender:
                 segment_products = similar_products[condition(similar_products)].copy()
                 
                 if not segment_products.empty:
-                    # S'assurer que les poids sont positifs
+                    # Make sure the weights are positive
                     weights = np.maximum(0, 
                         segment_products['initial_score'] * 
                         np.log1p(segment_products['reviews'])
                     )
                     
-                    # Normaliser les poids si non nuls
+                    # Normalise weights if non-zero
                     if weights.sum() > 0:
                         weights = weights / weights.sum()
                         selected = segment_products.sample(
@@ -154,7 +154,7 @@ class AmazonRecommender:
                             replace=False
                         )
                     else:
-                        # Si tous les poids sont nuls, sélectionner aléatoirement
+                        # If all the weights are zero, randomly select
                         selected = segment_products.sample(
                             n=min(count, len(segment_products)),
                             replace=False
@@ -178,13 +178,13 @@ class AmazonRecommender:
             result['pop_div'] = (np.log1p(result['reviews']) / 
                                 np.log1p(result['reviews'].max())).clip(0, 1)
             
-            # Score final garanti positif
+            # Guaranteed positive final score
             result['final_score'] = (
                 0.35 * result['cat_div'] +
                 0.25 * result['price_div'] +
                 0.20 * result['rating_div'] +
                 0.20 * result['pop_div']
-            ).clip(0, 1)  # S'assurer que le score final est entre 0 et 1
+            ).clip(0, 1)  # Make sure the final score is between 0 and 1
             
             return result.nlargest(min(n, len(result)), 'final_score')[
                 ['title', 'categoryName', 'price', 'stars', 'reviews', 'final_score']
@@ -195,7 +195,7 @@ class AmazonRecommender:
     
     def get_category_recommendations(self, category, n=5):
         """
-        Recommande les meilleurs produits d'une catégorie
+        Recommends the best products in a category
         """
         category_products = self.product_data[
             self.product_data['categoryName'] == category
@@ -217,7 +217,7 @@ class AmazonRecommender:
     
     def get_personalized_recommendations(self, user_prefs, n=5):
         """
-        Recommandations personnalisées basées sur les préférences utilisateur
+        Personalised recommendations based on user preferences
         """
         mask = (
             self.product_data['categoryName'].isin(user_prefs['categories']) &
@@ -243,7 +243,7 @@ class AmazonRecommender:
     
     def fit(self, df, verbose=True):
         """
-        Entraîne le système de recommandation
+        Drives the recommendation system
         """
         if verbose:
             print("Creating features...")

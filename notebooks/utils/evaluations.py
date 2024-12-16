@@ -6,7 +6,7 @@ from collections import defaultdict
 
 class RecommenderEvaluator:
     """
-    Classe d'évaluation pour le système de recommandation Amazon
+    Evaluation class for the Amazon recommendation system
     """
     def __init__(self, recommender, data):
         self.recommender = recommender
@@ -15,7 +15,7 @@ class RecommenderEvaluator:
     
     def evaluate_diversity(self, original_product, recommendations):
         """
-        Calcule les métriques de diversité pour un ensemble de recommandations
+        Calculates diversity metrics for a set of recommendations
         """
         try:
             metrics = {
@@ -31,7 +31,7 @@ class RecommenderEvaluator:
     
     def evaluate_relevance(self, recommendations):
         """
-        Calcule les métriques de pertinence pour un ensemble de recommandations
+        Calculates relevance metrics for a set of recommendations
         """
         try:
             metrics = {
@@ -48,13 +48,13 @@ class RecommenderEvaluator:
     
     def evaluate_coverage(self, n_samples=50):
         """
-        Calcule les métriques de couverture pour le système
+        Calculates system coverage metrics
         """
         try:
             total_categories = len(self.data['categoryName'].unique())
             total_price_range = self.data['price'].max() - self.data['price'].min()
             
-            # Échantillonnage stratifié
+            # Stratified sampling
             price_bins = pd.qcut(self.data['price'], q=5)
             sample_products = []
             
@@ -92,10 +92,10 @@ class RecommenderEvaluator:
     
     def evaluate_system(self, n_samples=50):
         """
-        Évaluation complète du système
+        Complete system assessment
         """
         try:
-            # Échantillonnage stratifié par gamme de prix
+            # Sampling stratified by price range
             price_bins = pd.qcut(self.data['price'], q=5)
             sample_products = []
             
@@ -127,7 +127,7 @@ class RecommenderEvaluator:
             
             coverage_metrics = self.evaluate_coverage(n_samples)
             
-            # Calcul des moyennes
+            # Calculating averages
             avg_metrics = {
                 'diversity': {k: np.mean([d[k] for d in metrics['diversity']]) 
                              for k in metrics['diversity'][0].keys()},
@@ -144,7 +144,7 @@ class RecommenderEvaluator:
 
     def plot_evaluation_results(self, results):
         """
-        Visualisation des résultats d'évaluation
+        Visualisation of assessment results
         """
         if not results:
             print("Pas de résultats à afficher")
@@ -152,25 +152,25 @@ class RecommenderEvaluator:
         
         fig, axes = plt.subplots(2, 2, figsize=(15, 12))
         
-        # Diversité
+        # Diversity
         diversity_data = pd.Series(results['diversity'])
         sns.barplot(x=diversity_data.index, y=diversity_data.values, ax=axes[0,0])
         axes[0,0].set_title('Diversity Metrics')
         axes[0,0].tick_params(axis='x', rotation=45)
         
-        # Pertinence
+        # Relevance
         relevance_data = pd.Series(results['relevance'])
         sns.barplot(x=relevance_data.index, y=relevance_data.values, ax=axes[0,1])
         axes[0,1].set_title('Pertinance Metrics')
         axes[0,1].tick_params(axis='x', rotation=45)
         
-        # Couverture
+        # Coverage
         coverage_data = pd.Series(results['coverage'])
         sns.barplot(x=coverage_data.index, y=coverage_data.values, ax=axes[1,0])
         axes[1,0].set_title('Coverage Metrics')
         axes[1,0].tick_params(axis='x', rotation=45)
         
-        # Score global
+        # Global Scores
         global_scores = {
             'Diversity': np.mean(list(results['diversity'].values())),
             'Relevance': np.mean(list(results['relevance'].values())),
