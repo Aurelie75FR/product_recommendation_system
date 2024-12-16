@@ -7,4 +7,5 @@ notebooks/.DS_Store
 .DS_Store
 *.in
 *.csv
+datasets.txt
 __pycache__
