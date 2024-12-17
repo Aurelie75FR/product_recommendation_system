@@ -120,16 +120,16 @@ class AmazonRecommender:
             ).clip(0, 1)  # Make sure the score is between 0 and 1
             
             segments = [
-                ("Même catégorie, prix différent", 
+                ("Same category, different price", 
                 lambda x: (x['category_similarity'] > 0.9) & 
                         (0.5 < x['price_ratio']) & (x['price_ratio'] < 2.0), 1),
                 
-                ("Catégorie similaire", 
+                ("Similar category", 
                 lambda x: (x['category_similarity'] > 0.6) & 
                         (0.3 < x['price_ratio']) & (x['price_ratio'] < 2.5) &
                         (x['stars'] >= 4.2), 2),
                 
-                ("Différent mais pertinent", 
+                ("Different but relevant", 
                 lambda x: (x['category_similarity'] > 0.4) & 
                         (0.2 < x['price_ratio']) & (x['price_ratio'] < 3.0) &
                         (x['stars'] >= 4.2), 2)
