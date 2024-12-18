@@ -43,7 +43,7 @@ class DataPreparation:
             time_series.columns = ['Date', 'Category', 'Number_of_Products']
             time_series.to_csv(f'{output_dir}time_series.csv', index=False)
     
-    def generate_wordcloud_data(self, output_file='wordcloud_data.csv'):
+    def generate_wordcloud_data(self, output_file='../data/dashboard_data/wordcloud_data.csv'):
         """
         Generates a dataset for the wordcloud based on product titles
         """
