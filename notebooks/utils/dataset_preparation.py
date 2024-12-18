@@ -9,7 +9,7 @@ class DataPreparation:
     def __init__(self, df):
         self.df = df
     
-    def generate_category_stats(self, output_dir='flourish_data/'):
+    def generate_category_stats(self, output_dir='../data/dashboard_data/'):
         """
         Generates CSV files for different Flourish visualizations
         """
